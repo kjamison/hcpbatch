@@ -126,14 +126,14 @@ for Subject in $Subjlist ; do
 	#PEneg=LR
 	#UnwarpAxis=x
 
-	#!!!!!!!opposite of pos/neg for functional data
-	PEpos=AP
-	PEneg=PA
+	#!!!!!!!opposite of pos/neg for functional data  #now fixed
+	PEpos=PA
+	PEneg=AP
 
-  # Data with positive Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (LR in HCP data, AP in 7T HCP data)
+  # Data with positive Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (RL in HCP data, PA in 7T HCP data)
 	PosData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEpos}[_\.]" | sort | tr "\n" "@" | sed -r 's/@$//'`
 
-  # Data with negative Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (RL in HCP data, PA in 7T HCP data)
+  # Data with negative Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (LR in HCP data, AP in 7T HCP data)
   # If corresponding series is missing (e.g. 2 RL series and 1 LR) use EMPTY.
 	NegData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEneg}[_\.]" | sort | tr "\n" "@" | sed -r 's/@$//'`
 

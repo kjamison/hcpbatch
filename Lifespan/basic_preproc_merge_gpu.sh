@@ -135,11 +135,11 @@ ${FSLDIR}/bin/fslmerge -t ${rawdir}/PA_b0 `${FSLDIR}/bin/imglob ${rawdir}/PA_b0_
 
 echo "Perform Final Merge"
 
-${FSLDIR}/bin/fslmerge -t ${rawdir}/AP_PA_b0 ${rawdir}/AP_b0 ${rawdir}/PA_b0 
-${FSLDIR}/bin/fslmerge -t ${rawdir}/AP_PA ${rawdir}/AP.nii* ${rawdir}/PA.nii*
+${FSLDIR}/bin/fslmerge -t ${rawdir}/PA_AP_b0 ${rawdir}/PA_b0 ${rawdir}/AP_b0 
+${FSLDIR}/bin/fslmerge -t ${rawdir}/PA_AP ${rawdir}/PA.nii* ${rawdir}/AP.nii*
  
-paste ${rawdir}/AP.bval ${rawdir}/PA.bval | sed 's/[\t]//g' >${rawdir}/bvals
-paste ${rawdir}/AP.bvec ${rawdir}/PA.bvec | sed 's/[\t]//g' >${rawdir}/bvecs
+paste ${rawdir}/PA.bval ${rawdir}/AP.bval | sed 's/[\t]//g' >${rawdir}/bvals
+paste ${rawdir}/PA.bvec ${rawdir}/AP.bvec | sed 's/[\t]//g' >${rawdir}/bvecs
 
 #######################################
 ${FSLDIR}/bin/imrm `${FSLDIR}/bin/imglob ${rawdir}/AP_b0_????.*`
@@ -155,14 +155,14 @@ exit 0
 echo "Move files to appropriate directories"
 mv ${rawdir}/preproc.txt ${topupdir} #aka extractedb0.txt 
 mv ${rawdir}/acqparams.txt ${topupdir}
-${FSLDIR}/bin/immv ${rawdir}/AP_PA_b0 ${topupdir}
+${FSLDIR}/bin/immv ${rawdir}/PA_AP_b0 ${topupdir}
 ${FSLDIR}/bin/immv ${rawdir}/AP_b0 ${topupdir}
 ${FSLDIR}/bin/immv ${rawdir}/PA_b0 ${topupdir}
 
 cp ${topupdir}/acqparams.txt ${eddydir}
 mv ${rawdir}/index.txt ${eddydir}
 mv ${rawdir}/series_index.txt ${eddydir}
-${FSLDIR}/bin/immv ${rawdir}/AP_PA ${eddydir}
+${FSLDIR}/bin/immv ${rawdir}/PA_AP ${eddydir}
 mv ${rawdir}/bvals ${eddydir}
 mv ${rawdir}/bvecs ${eddydir}
 mv ${rawdir}/AP.bv?? ${eddydir}

@@ -4,7 +4,7 @@ set -e
 
 Subjlist=$1
 StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan" #Location of Subject folders (named by subjectID)
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/home/range1-raid1/kjamison/Source/PipelineBatch/SetUpHCPPipeline.sh" #Pipeline environment script
 
 #Set up pipeline environment variables and software
 . ${EnvironmentScript} &> /dev/null
