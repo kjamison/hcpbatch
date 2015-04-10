@@ -1,4 +1,6 @@
 logs/
 *.nii.gz
 *.nii
+*.log
+*.out
 
