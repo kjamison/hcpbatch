@@ -9,7 +9,7 @@ EndWith=`echo $4 melodic | awk '{print $1}'`
 #startwith = dcm2nii , init gdc mc dc resample norm results , surface, hpf, melodic
 
 StudyFolder="/home/range1-raid1/kjamison/Data2/Phase2_7T" #Location of Subject folders (named by subjectID)
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 # Requirements for this script
 #  installed versions of: FSL5.0.2 or higher , FreeSurfer (version 5.2 or higher) , gradunwarp (python code from MGH)

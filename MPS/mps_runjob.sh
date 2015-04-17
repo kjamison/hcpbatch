@@ -3,12 +3,12 @@
 Subject_all=$1
 ScanName_all=$2
 StartWith=`echo $3 dcm2nii | awk '{print $1}'`
-EndWith=`echo $4 melodic | awk '{print $1}'`
+EndWith=`echo $4 final | awk '{print $1}'`
 
 #ScanName = eg REST1_PA
 #startwith = dcm2nii , init gdc mc dc resample norm results , surface, hpf, melodic
 
-StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan" #Location of Subject folders (named by subjectID)
+StudyFolder="/home/range1-raid1/kjamison/Data/MPS" #Location of Subject folders (named by subjectID)
 EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 # Requirements for this script
@@ -122,13 +122,18 @@ for Subject in $Subject_all; do
 
         dof_epi2t1=12
 
-        #PEpos=RL
-        #PEneg=LR
-	#UnwarpAxis=x
-
-        PEpos=PA
-        PEneg=AP
-	UnwarpAxis=y
+	if [[ ${ScanName} = *_AP || ${ScanName} = *_PA ]]; then
+		PEpos=PA
+		PEneg=AP
+		UnwarpAxis=y
+	elif [[ ${ScanName} = *_RL || ${ScanName} = *_LR ]]; then
+		PEpos=RL
+		PEneg=LR
+		UnwarpAxis=x
+	else
+		printf "Unknown PE direction: %s\n" `basename ${ScanName}`
+		exit 0
+	fi
 
         if [[ ${ScanName} == *_${PEpos} ]]; then
 	        PEdir=${PEpos}
@@ -151,29 +156,47 @@ for Subject in $Subject_all; do
         mbfile_full=`imfind ${niidir}/BOLD_${TaskName}_${PEdir}`
         sefilePos_full=`imfind ${niidir}/SE_${TaskName}_${PEpos}`
         sefileNeg_full=`imfind ${niidir}/SE_${TaskName}_${PEneg}`
+        fmfileMag_full=`imfind ${niidir}/FM_${TaskName}_Fieldmap_Mag`
+        fmfilePhs_full=`imfind ${niidir}/FM_${TaskName}_Fieldmap_Phs`
 
-        if [ X${sbfile_full} == X ]; then
-            echo "missing sbfile for: "${Subject} ${ScanName} 1>&2
-            continue
-            #exit 0
-        elif [ X${mbfile_full} == X ]; then
+        if [ X${mbfile_full} == X ]; then
             echo "missing mbfile for: "${Subject} ${ScanName} 1>&2
             continue
             #exit 0
-        elif [ X${sefilePos_full} == X ]; then
-            echo "missing SE for: "${Subject} ${ScanName} 1>&2
-            continue
-            #exit 0
-        elif [ X${sefileNeg_full} == X ]; then
-            echo "missing SE for: "${Subject} ${ScanName} 1>&2
+	fi
+
+	hasSE=
+	hasFM=
+	sbfile=
+	mbfile=
+	sefilePos=
+	sefileNeg=
+	fmfileMag=
+	fmfilePhs=
+
+	mbfile=`basename ${mbfile_full}`
+
+	if [[ "X${sbfile_full}" != X ]]; then
+		sbfile=`basename ${sbfile_full}`
+	fi
+
+	if [[ "X${sefilePos_full}" != X && "X${sefileNeg_full}" != X ]]; then
+		hasSE=1
+		sefilePos=`basename ${sefilePos_full}`
+		sefileNeg=`basename ${sefileNeg_full}`
+	fi
+	if [[ "X${fmfileMag_full}" != X && "X${fmfilePhs_full}" != X ]]; then
+		hasFM=1
+		fmfileMag=`basename ${fmfileMag_full}`
+		fmfilePhs=`basename ${fmfilePhs_full}`
+	fi
+
+	if [[ "x${hasSE}${hasFM}" != "x1" ]]; then
+	    echo "missing SE and FM for: "${Subject} ${ScanName} 1>&2
             continue
             #exit 0
         fi
 
-        sbfile=`basename ${sbfile_full}`
-        mbfile=`basename ${mbfile_full}`
-        sefilePos=`basename ${sefilePos_full}`
-        sefileNeg=`basename ${sefileNeg_full}`
         ###########################################
         #### make sure all images have even number of slices, otherwise topup will fail with subsamp 2
 
@@ -210,8 +233,8 @@ for Subject in $Subject_all; do
         #################################################################
         ############### Volume Pipeline Options ########################
 
-            #fMRISBRef="${sbfile}"
-            fMRISBRef="NONE"
+            fMRISBRef="${sbfile}"
+            #fMRISBRef="NONE"
 
             DistortionCorrection="TOPUP" #FIELDMAP or TOPUP, distortion correction is required for accurate processing
 
@@ -228,6 +251,8 @@ for Subject in $Subject_all; do
             PhaseInputName="NONE" #Expects a 3D Phase volume, set to NONE if using TOPUP
             DeltaTE="NONE" #2.46ms for 3T, 1.02ms for 7T, set to NONE if using TOPUP
 
+            TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf" #Topup config if using TOPUP, set to NONE if using regular FIELDMAP
+
 	if [[ ${Subject} == *_3T* ]]; then
 		GradientDistortionCoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_Prisma_coeff_AS82_20141111.grad"
 		FinalFMRIResolution=2.00
@@ -236,9 +261,29 @@ for Subject in $Subject_all; do
 		GradientDistortionCoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_7TAS_coeff_SC72CD_20141111.grad"
 		FinalFMRIResolution=1.60
 		DwellTime="0.00032" #Echo Spacing or Dwelltime of fMRI image
+
+	elif [[ ${ScanName} == 2013_* || ${ScanName} == 2014_* ]]; then
+		#Trio data
+		FinalFMRIResolution=3.50
+		GradientDistortionCoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_Trio_coeff_AS05_PT3_20141111.grad"
+		DwellTime="0.00043" #Echo Spacing or Dwelltime of fMRI image
+
+            	MagnitudeInputName=${fmfileMag_full}
+            	PhaseInputName=${fmfilePhs_full}
+            	DeltaTE="2.46" #2.46ms for 3T, 1.02ms for 7T, set to NONE if using TOPUP
+
+		fMRISBRef="NONE"
+		DistortionCorrection="FIELDMAP"
+		SpinEchoPhaseEncodeNegative="NONE"
+		SpinEchoPhaseEncodePositive="NONE"
+		TopUpConfig="NONE"
+	else
+		#Skyra data
+		FinalFMRIResolution=2.00
+		GradientDistortionCoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/WUSTL_ConnectomS_coeff_SC72C_20141119.grad"
+		DwellTime="0.00058" #Echo Spacing or Dwelltime of fMRI image
 	fi
             
-            TopUpConfig="${HCPPIPEDIR_Config}/b02b0.cnf" #Topup config if using TOPUP, set to NONE if using regular FIELDMAP
 
             # to use .nii for temp files (instead of nii.gz)
             TMP_FSLOUTPUTTYPE=NIFTI #MOCO only: temp files take up more space but runs faster

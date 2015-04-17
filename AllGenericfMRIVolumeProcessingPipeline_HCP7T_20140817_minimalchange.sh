@@ -10,7 +10,7 @@ fi
 
 
 StudyFolder="/home/range1-raid1/kjamison/Data/Phase2_7T" #Location of Subject folders (named by subjectID)
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 SessFolder="REST1"
 
 

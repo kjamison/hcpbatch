@@ -37,7 +37,9 @@ get_batch_options() {
 get_batch_options $@
 
 Subjlist=$1
-StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan" #Location of Subject folders (named by subjectID)
+b0type=$2
+
+StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan/b0test" #Location of Subject folders (named by subjectID)
 EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 if [ -n "${command_line_specified_study_folder}" ]; then
@@ -108,22 +110,16 @@ for Subject in $Subjlist ; do
   # Gdcoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" #Coefficients that describe spatial variations of the scanner gradients. Use NONE if not available.
   #Gdcoeffs="NONE" # Set to NONE to skip gradient distortion correction
   
-  
+	SubjectID_b0type=`echo ${SubjectID} | sed -r 's/_b0$/_'${b0type}'/'`
 
-	if [[ ${Subject} == *_3T* ]] || [[ ${Subject} == *_b0 ]]; then
-  		RawDataDir="$StudyFolder/$SubjectID/unprocessed/3T/Diffusion" #Folder where unprocessed diffusion data are
-		Gdcoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_Prisma_coeff_AS82_20141111.grad"
-		EchoSpacing="0.69" #Echo Spacing in msec for DWI (divided by 1000 in basic_preproc.sh)
-	elif [[ ${Subject} == *_7T* ]]; then
-  		RawDataDir="$StudyFolder/$SubjectID/unprocessed/7T/Diffusion" #Folder where unprocessed diffusion data are
-		Gdcoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_7TAS_coeff_SC72CD_20141111.grad"
-		EchoSpacing="0.25" #Echo Spacing in msec for DWI (divided by 1000 in basic_preproc.sh)
-	else 
-		echo "Unable to determine MRI scanner parameters for ${Subject}"
-		exit 0
-	fi
+	RawDataDir="$StudyFolder/../${SubjectID}/unprocessed/b0recombine" #Folder where unprocessed diffusion data are
+	Gdcoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_Prisma_coeff_AS82_20141111.grad"
+	EchoSpacing="0.69" #Echo Spacing in msec for DWI (divided by 1000 in basic_preproc.sh)
+	dof_epi2t1=6
 
-	dof_epi2t1=12
+  Useb0options="False"
+
+	#dof_epi2t1=12
 
 	#PEpos=RL
 	#PEneg=LR
@@ -134,11 +130,11 @@ for Subject in $Subjlist ; do
 	PEneg=AP
 
   # Data with positive Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (RL in HCP data, PA in 7T HCP data)
-	PosData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEpos}[_\.]" | sort | tr "\n" "@" | sed -r 's/@$//'`
+	PosData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEpos}[_\.]" | grep ${b0type} | sort | tr "\n" "@" | sed -r 's/@$//'`
 
   # Data with negative Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (LR in HCP data, AP in 7T HCP data)
   # If corresponding series is missing (e.g. 2 RL series and 1 LR) use EMPTY.
-	NegData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEneg}[_\.]" | sort | tr "\n" "@" | sed -r 's/@$//'`
+	NegData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEneg}[_\.]" | grep ${b0type} | sort | tr "\n" "@" | sed -r 's/@$//'`
 
   #Scan Setings
   #EchoSpacing=0.78 #Echo Spacing or Dwelltime of dMRI image, set to NONE if not used. Dwelltime = 1/(BandwidthPerPixelPhaseEncode * # of phase encoding samples): DICOM field (0019,1028) = BandwidthPerPixelPhaseEncode, DICOM field (0051,100b) AcquisitionMatrixText first value (# of phase encoding samples).  On Siemens, iPAT/GRAPPA factors have already been accounted for.
@@ -158,10 +154,18 @@ for Subject in $Subjlist ; do
 
   ${queuing_command} ${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
       --posData="${PosData}" --negData="${NegData}" \
-      --path="${StudyFolder}" --subject="${SubjectID}" \
+      --path="${StudyFolder}" --subject="${SubjectID_b0type}" \
       --echospacing="${EchoSpacing}" --PEdir=${PEdir} \
-      --gdcoeffs="${Gdcoeffs}" \
+      --gdcoeffs="${Gdcoeffs}" --b0options=${Useb0options} \
       --printcom=$PRINTCOM
 
+  diffdir=${StudyFolder}/${SubjectID_b0type}/Diffusion/data
+  dtifit \
+    --data=${diffdir}/data \
+    --out=${diffdir}/dti \
+    --mask=${diffdir}/nodif_brain_mask \
+    --bvecs=${diffdir}/bvecs 
+    --bvals=${diffdir}/bvals \
+    --save_tensor
 done
 

@@ -3,14 +3,13 @@
 if [ $# -eq 0 ] 
 then
 	echo
-	echo "$0 <subjid> mov1 REST REST1 <SBscan> <MBscan> <PASEscan> <APSEscan>"
+	echo "$0 <subjid> REST REST1 <SBscan> <MBscan> <PASEscan> <APSEscan>"
 	echo "<SBscan> etc... = scan number of SBRef in dicom directory"
 	echo "eg: <SBscan>=6 for MR-SE006-BOLD_REST1_SBRef"
 	echo
 	exit 0
 else
 	SUBJID=$1; shift;
-	scantype=$1; shift;
 	scanname=$1; shift;
 	scannums=$@
 fi
@@ -18,8 +17,8 @@ fi
 RUN=""
 #RUN="echo"
 
-StudyFolder=/home/range1-raid1/kjamison/Data/Lifespan
-dicomdir=/home/range3-raid4/dicom
+StudyFolder=/home/range1-raid1/kjamison/Data/MPS
+dicomdir=/home/range1-raid1/igor-data/LDN/connectome
 
 taskname=`echo ${scanname} | sed 's/_[APLR]\+$//'`
 
@@ -48,17 +47,31 @@ if [[ $MBdicomdir = *_AP ]]; then
 	PEstr=AP
 elif [[ $MBdicomdir = *_PA ]]; then
 	PEstr=PA
+elif [[ $MBdicomdir = *_RL ]]; then
+	PEstr=RL
+elif [[ $MBdicomdir = *_LR ]]; then
+	PEstr=LR
 else
 	printf "Unknown PE direction: %s\n" `basename ${MBdicomdir}`
 	exit 0
+fi
+
+if [[ $PEstr = AP || $PEstr = PA ]]; then
+        PEpos=PA
+        PEneg=AP
+	UnwarpAxis=y
+else
+        PEpos=RL
+        PEneg=LR
+	UnwarpAxis=x
 fi
 
 echo
 echo "${sessdir}"
 echo "SBRef = ${SBdicomdir}"
 echo "MB    = ${MBdicomdir}"
-echo "PASE  = ${PASEdicomdir}"
-echo "APSE  = ${APSEdicomdir}"
+echo "${PEpos}SE  = ${PASEdicomdir}"
+echo "${PEneg}SE  = ${APSEdicomdir}"
 echo "T1    = ${T1dir}"
 echo "MNI   = ${MNIdir}"
 echo
@@ -68,8 +81,8 @@ nifti_ext="nii.gz"
 
 SBnii="BOLD_${taskname}_${PEstr}_SBRef.${nifti_ext}"
 MBnii="BOLD_${taskname}_${PEstr}.${nifti_ext}"
-PASEnii="SE_${taskname}_PA.${nifti_ext}"
-APSEnii="SE_${taskname}_AP.${nifti_ext}"
+PASEnii="SE_${taskname}_${PEpos}.${nifti_ext}"
+APSEnii="SE_${taskname}_${PEneg}.${nifti_ext}"
 
 niidir=${StudyFolder}/${SUBJID}
 rawdir=${niidir}/unprocessed/${scanname}
@@ -93,7 +106,7 @@ else
 	${RUN} dcm2nii_filename --rename ${MBnii} -b ~/hcp_pipeline/dcm2nii_hcp.ini -o ${rawdir} `ls $MBdicomdir/*.dcm | head -n 1`
 fi
 
-echo "completed: $SUBJID $sessname $scantype $scanname"
+echo "completed: $SUBJID $sessname $scanname"
 
 #${RUN} cp -R ${T1dir} ${MNIdir} ${niidir}
 

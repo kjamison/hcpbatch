@@ -6,7 +6,7 @@ u=$USER
 m=`hostname -s`
 
 StudyFolder="/home/range1-raid1/kjamison/Data2/Phase2_7T" #Location of Subject folders (named by subjectID)
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 #Set up pipeline environment variables and software
 . ${EnvironmentScript} > /dev/null

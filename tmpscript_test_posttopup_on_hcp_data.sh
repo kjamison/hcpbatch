@@ -13,7 +13,7 @@ ScanName_all=$2
 
 dof_epi2t1=12
 
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh"
+EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh"
 
 . ${EnvironmentScript} &> /dev/null
 

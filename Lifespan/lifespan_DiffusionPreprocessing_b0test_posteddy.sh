@@ -37,7 +37,9 @@ get_batch_options() {
 get_batch_options $@
 
 Subjlist=$1
-StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan" #Location of Subject folders (named by subjectID)
+b0type=$2
+
+StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan/b0test" #Location of Subject folders (named by subjectID)
 EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 if [ -n "${command_line_specified_study_folder}" ]; then
@@ -108,22 +110,14 @@ for Subject in $Subjlist ; do
   # Gdcoeffs="${HCPPIPEDIR_Config}/coeff_SC72C_Skyra.grad" #Coefficients that describe spatial variations of the scanner gradients. Use NONE if not available.
   #Gdcoeffs="NONE" # Set to NONE to skip gradient distortion correction
   
-  
+	SubjectID_b0type=`echo ${SubjectID} | sed -r 's/_b0$/_'${b0type}'/'`
 
-	if [[ ${Subject} == *_3T* ]] || [[ ${Subject} == *_b0 ]]; then
-  		RawDataDir="$StudyFolder/$SubjectID/unprocessed/3T/Diffusion" #Folder where unprocessed diffusion data are
-		Gdcoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_Prisma_coeff_AS82_20141111.grad"
-		EchoSpacing="0.69" #Echo Spacing in msec for DWI (divided by 1000 in basic_preproc.sh)
-	elif [[ ${Subject} == *_7T* ]]; then
-  		RawDataDir="$StudyFolder/$SubjectID/unprocessed/7T/Diffusion" #Folder where unprocessed diffusion data are
-		Gdcoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_7TAS_coeff_SC72CD_20141111.grad"
-		EchoSpacing="0.25" #Echo Spacing in msec for DWI (divided by 1000 in basic_preproc.sh)
-	else 
-		echo "Unable to determine MRI scanner parameters for ${Subject}"
-		exit 0
-	fi
+	RawDataDir="$StudyFolder/../${SubjectID}/unprocessed/b0recombine" #Folder where unprocessed diffusion data are
+	Gdcoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_Prisma_coeff_AS82_20141111.grad"
+	EchoSpacing="0.69" #Echo Spacing in msec for DWI (divided by 1000 in basic_preproc.sh)
+	dof_epi2t1=6
 
-	dof_epi2t1=12
+	#dof_epi2t1=12
 
 	#PEpos=RL
 	#PEneg=LR
@@ -134,11 +128,11 @@ for Subject in $Subjlist ; do
 	PEneg=AP
 
   # Data with positive Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (RL in HCP data, PA in 7T HCP data)
-	PosData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEpos}[_\.]" | sort | tr "\n" "@" | sed -r 's/@$//'`
+	PosData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEpos}[_\.]" | grep ${b0type} | sort | tr "\n" "@" | sed -r 's/@$//'`
 
   # Data with negative Phase encoding direction. Up to N>=1 series (here N=3), separated by @. (LR in HCP data, AP in 7T HCP data)
   # If corresponding series is missing (e.g. 2 RL series and 1 LR) use EMPTY.
-	NegData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEneg}[_\.]" | sort | tr "\n" "@" | sed -r 's/@$//'`
+	NegData=`find -L ${RawDataDir} -type f | grep -iE '\.nii(\.gz)?$' | grep -E "DWI.*_${PEneg}[_\.]" | grep ${b0type} | sort | tr "\n" "@" | sed -r 's/@$//'`
 
   #Scan Setings
   #EchoSpacing=0.78 #Echo Spacing or Dwelltime of dMRI image, set to NONE if not used. Dwelltime = 1/(BandwidthPerPixelPhaseEncode * # of phase encoding samples): DICOM field (0019,1028) = BandwidthPerPixelPhaseEncode, DICOM field (0051,100b) AcquisitionMatrixText first value (# of phase encoding samples).  On Siemens, iPAT/GRAPPA factors have already been accounted for.
@@ -156,12 +150,64 @@ for Subject in $Subjlist ; do
       queuing_command="${FSLDIR}/bin/fsl_sub ${QUEUE}"
   fi
 
-  ${queuing_command} ${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
+  echo ${queuing_command} ${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline.sh \
       --posData="${PosData}" --negData="${NegData}" \
-      --path="${StudyFolder}" --subject="${SubjectID}" \
+      --path="${StudyFolder}" --subject="${SubjectID_b0type}" \
       --echospacing="${EchoSpacing}" --PEdir=${PEdir} \
       --gdcoeffs="${Gdcoeffs}" \
       --printcom=$PRINTCOM
+
+PRINTCOM=
+${queuing_command} ${HCPPIPEDIR}/DiffusionPreprocessing/DiffPreprocPipeline_PostEddy.sh \
+--path=${StudyFolder} \
+--subject=${SubjectID_b0type} \
+--gdcoeffs=${Gdcoeffs} \
+--dof=${dof_epi2t1} \
+--printcom="${PRINTCOM}"
+
+exit 0
+    outdir=${StudyFolder}/${SubjectID_b0type}/Diffusion
+    outdirT1w=${StudyFolder}/${SubjectID_b0type}/T1w/Diffusion
+
+FSSubject=`echo ${SubjectID} | sed -r 's/_b0$/_3T/'`
+#FSSubject=LSKJ_3T
+DegreesOfFreedom=${dof_epi2t1}
+GdFlag=1
+
+    DiffRes=`${FSLDIR}/bin/fslval ${outdir}/data/data pixdim1`
+    DiffRes=`printf "%0.2f" ${DiffRes}`
+
+
+
+
+    T1wFolder="${StudyFolder}/${SubjectID_b0type}/T1w" #Location of T1w images
+    T1wImage="${T1wFolder}/T1w_acpc_dc"
+    T1wRestoreImage="${T1wFolder}/T1w_acpc_dc_restore"
+    T1wRestoreImageBrain="${T1wFolder}/T1w_acpc_dc_restore_brain"
+    BiasField="${T1wFolder}/BiasField_acpc_dc"
+    FreeSurferBrainMask="${T1wFolder}/brainmask_fs"
+    RegOutput="${outdir}"/reg/"Scout2T1w"
+    QAImage="${outdir}"/reg/"T1wMulEPI"
+    DiffRes=`${FSLDIR}/bin/fslval ${outdir}/data/data pixdim1`
+    DiffRes=`printf "%0.2f" ${DiffRes}`
+
+    log_Msg "Running Diffusion to Structural Registration"
+    ${runcmd} ${HCPPIPEDIR_dMRI}/DiffusionToStructural.sh \
+        --t1folder="${T1wFolder}" \
+        --subject="${FSSubject}" \
+        --workingdir="${outdir}/reg" \
+        --datadiffdir="${outdir}/data" \
+        --t1="${T1wImage}" \
+        --t1restore="${T1wRestoreImage}" \
+        --t1restorebrain="${T1wRestoreImageBrain}" \
+        --biasfield="${BiasField}" \
+        --brainmask="${FreeSurferBrainMask}" \
+        --datadiffT1wdir="${outdirT1w}" \
+        --regoutput="${RegOutput}" \
+        --QAimage="${QAImage}" \
+        --dof="${DegreesOfFreedom}" \
+        --gdflag=${GdFlag} \
+        --diffresol=${DiffRes}
 
 done
 

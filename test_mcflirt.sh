@@ -1,4 +1,4 @@
-. ~/hcp_pipeline/SetUpHCPPipeline.sh
+. ~/Source/BatchPipeline/SetUpHCPPipeline.sh
 
 fMRIFolder=/home/range1-raid1/kjamison/Data/mayo_data/subj03/REST1_mcflirt
 NameOffMRI=REST1_20vol

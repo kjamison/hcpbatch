@@ -10,7 +10,7 @@ scantype=REST
 dicomroot=~/range3hcp;
 motionqc_root=~/Data/motion_qc/Lifespan
 
-. ~/hcp_pipeline/SetUpHCPPipeline.sh
+. ~/Source/BatchPipeline/SetUpHCPPipeline.sh
 
 PipelineScripts=${HCPPIPEDIR_PreFS}
 GlobalScripts=${HCPPIPEDIR_Global}

@@ -7,7 +7,7 @@ ScanName_all="REST1_AP"
 T1wName=T1w_Prisma
 #T1wName=T1w_Skyra
 
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 . ${EnvironmentScript} &> /dev/null
 
 for subj in $Subject_all; do

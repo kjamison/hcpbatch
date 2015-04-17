@@ -6,7 +6,7 @@
 
 Subjlist=$1 #Space delimited list of subject IDs
 StudyFolder="/home/range1-raid1/kjamison/Data/mayo_data" #Location of Subject folders (named by subjectID)
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 
 # Requirements for this script

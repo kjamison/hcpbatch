@@ -28,7 +28,8 @@ export CARET7DIR=/home/range1-raid1/kjamison/workbench_dev/bin_rh_linux64
 ####### section added KJ 2015-03-04
 # updated eddy cuda binary
 #export gpuEnabledEddy="${FSLDIR}/bin/eddy.gpu"
-export gpuEnabledEddy="${HCPPIPEDIR}/global/binaries/eddy_cuda_65"
+#export gpuEnabledEddy="${HCPPIPEDIR}/global/binaries/eddy_cuda_65"
+export gpuEnabledEddy="${HCPPIPEDIR}/global/binaries/eddy_cuda_65.20150401"
 ########
 
 export HCPPIPEDIR_Templates=${HCPPIPEDIR}/global/templates

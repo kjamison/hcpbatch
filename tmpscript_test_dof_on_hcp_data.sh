@@ -3,7 +3,7 @@
 Subject_all=`ls /home/range1-raid1/kjamison/Data2/Phase2_7T`
 ScanName_all="REST1_LR REST1_RL REST2_LR REST2_RL"
 
-EnvironmentScript="/home/range1-raid1/kjamison/hcp_pipeline/SetUpHCPPipeline.sh" #Pipeline environment script
+EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 . ${EnvironmentScript} &> /dev/null
 
 for subj in $Subject_all; do

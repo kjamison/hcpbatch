@@ -5,7 +5,7 @@
 #EnvironmentScript="/media/2TBB/Connectome_Project/Pipelines/Examples/Scripts/SetUpHCPPipeline.sh" #Pipeline environment script
 
 Subjlist=$1 #Space delimited list of subject IDs
-StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan" #Location of Subject folders (named by subjectID)
+StudyFolder="/home/range1-raid1/kjamison/Data/MPS" #Location of Subject folders (named by subjectID)
 EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 

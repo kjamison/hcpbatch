@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 Subject_all=$1 #Space delimited list of subject IDs
-StudyFolder="/home/range1-raid1/kjamison/Data/Lifespan" #Location of Subject folders (named by subjectID)
+StudyFolder="/home/range1-raid1/kjamison/Data/MPS" #Location of Subject folders (named by subjectID)
 EnvironmentScript="/home/range1-raid1/kjamison/Source/BatchPipeline/SetUpHCPPipeline.sh" #Pipeline environment script
 
 # Requirements for this script
@@ -89,7 +89,7 @@ for Subject in $Subject_all ; do
   T1wSampleSpacing="0.0000074" #DICOM field (0019,1018) in s or "NONE" if not used # 0.8mm Prisma
   T2wSampleSpacing="0.0000021" #DICOM field (0019,1018) in s or "NONE" if not used # 0.8mm Prisma
   UnwarpDir="z" #z appears to be best or "NONE" if not used
-  GradientDistortionCoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/CMRR_Prisma_coeff_AS82_20141111.grad"
+  GradientDistortionCoeffs="/home/range1-raid1/kjamison/hcp_pipeline/grad_coeffs/copied_from_scanners/WUSTL_ConnectomS_coeff_SC72C_20141119.grad"
 
   #Config Settings
   BrainSize="150" #BrainSize in mm, 150 for humans
