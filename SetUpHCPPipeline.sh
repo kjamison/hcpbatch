@@ -13,8 +13,8 @@ export FSL_DIR=$FSLDIR
 #FREESURFER_HOME=/usr/local/bin/freesurfer
 
 #hcp-5.3.0 mris_make_surfaces crashes
-export FREESURFER_HOME=/opt/local/hcp-5.3.0/freesurfer
 #export FREESURFER_HOME=/opt/local/freesurfer-5.3/x86_64
+export FREESURFER_HOME=/opt/local/hcp-5.3.0/freesurfer
 export FSFAST_HOME=${FREESURFER_HOME}/fsfast
 . ${FREESURFER_HOME}/SetUpFreeSurfer.sh > /dev/null 2>&1
 
@@ -46,7 +46,7 @@ export HCPPIPEDIR_dMRI=${HCPPIPEDIR}/DiffusionPreprocessing/scripts
 export HCPPIPEDIR_dMRITract=${HCPPIPEDIR}/DiffusionTractography/scripts
 export HCPPIPEDIR_Global=${HCPPIPEDIR}/global/scripts
 export HCPPIPEDIR_tfMRIAnalysis=${HCPPIPEDIR}/TaskfMRIAnalysis/scripts
-export MSMBin=${HCPPIPEDIR}/MSMBinaries
+export MSMBin=${HCPPIPEDIR}/global/binaries/MSMBinaries
 
 ## WASHU config - as understood by MJ - (different structure from the GIT repository)
 ## Also look at: /nrgpackages/scripts/tools_setup.sh
